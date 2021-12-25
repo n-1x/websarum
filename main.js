@@ -20,10 +20,10 @@ const PI = 3.141592;
 const TAU = PI * 2;
 
 
-let SA =                queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(20);
-let RA =                queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(5);
-let SO =                queryParams.has("so") ? queryParams.get("so") : 9;
-let evapourationSpeed = queryParams.has("es") ? queryParams.get("es") : 0.01;
+let SA =                queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(22.5);
+let RA =                queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(22.5);
+let SO =                queryParams.has("so") ? queryParams.get("so") : 3;
+let evapourationSpeed = queryParams.has("es") ? queryParams.get("es") : 0.03;
 let speed =             queryParams.has("sp") ? queryParams.get("sp") : 1;
 let RED =               queryParams.has("re") ? queryParams.get("re") : 30;
 let GREEN =             queryParams.has("gr") ? queryParams.get("gr") : 128;
@@ -195,15 +195,19 @@ const updateFS = `#version 300 es
         if (inBounds(centrePos)) {
             F = getStrength(centrePos);
         }
-
+        
         if (inBounds(leftPos)) {
             FL = getStrength(leftPos);
         }
-
+        
         if (inBounds(rightPos)) {
-            FR = getStrength(rightPos);
+            FR += getStrength(rightPos);
         }
         
+        if (FR == 0. || FL == 0. || F == 0.) {
+            return h21(pos) * ${TAU};
+        }
+
         float nextAngle = angle;
 
         if (F > FL && F > FR) {
