@@ -18,14 +18,16 @@ const PARTICLE_TEXTURE_HEIGHT = PARTICLE_TEXTURE_WIDTH;
 const PI = 3.141592;
 const TAU = PI * 2;
 
-let SA = rad(45);
-let RA = rad(45);
-let SO = 9;
-let evapourationSpeed = 0.01;
-let speed = 1;
-let RED = 30;
-let GREEN = 128;
-let BLUE = 255;
+const queryParams = new URLSearchParams(window.location.search);
+
+let SA =                queryParams.has("sa") ? queryParams.get("sa") : rad(20);
+let RA =                queryParams.has("ra") ? queryParams.get("ra") : rad(5);
+let SO =                queryParams.has("so") ? queryParams.get("so") : 9;
+let evapourationSpeed = queryParams.has("es") ? queryParams.get("es") : 0.01;
+let speed =             queryParams.has("sp") ? queryParams.get("sp") : 1;
+let RED =               queryParams.has("re") ? queryParams.get("re") : 30;
+let GREEN =             queryParams.has("gr") ? queryParams.get("gr") : 128;
+let BLUE =              queryParams.has("bl") ? queryParams.get("bl") : 255;
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
