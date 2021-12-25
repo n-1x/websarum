@@ -13,15 +13,15 @@
 
 "use strict"
 
-const PARTICLE_TEXTURE_WIDTH = 1000;
-const PARTICLE_TEXTURE_HEIGHT = PARTICLE_TEXTURE_WIDTH;
+const queryParams = new URLSearchParams(window.location.search);
+const PARTICLE_TEXTURE_WIDTH = queryParams.has("wi") ? queryParams.get("wi") : 1000;
+const PARTICLE_TEXTURE_HEIGHT = queryParams.has("he") ? queryParams.get("he") : PARTICLE_TEXTURE_WIDTH;
 const PI = 3.141592;
 const TAU = PI * 2;
 
-const queryParams = new URLSearchParams(window.location.search);
 
-let SA =                queryParams.has("sa") ? queryParams.get("sa") : rad(20);
-let RA =                queryParams.has("ra") ? queryParams.get("ra") : rad(5);
+let SA =                queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(20);
+let RA =                queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(5);
 let SO =                queryParams.has("so") ? queryParams.get("so") : 9;
 let evapourationSpeed = queryParams.has("es") ? queryParams.get("es") : 0.01;
 let speed =             queryParams.has("sp") ? queryParams.get("sp") : 1;
