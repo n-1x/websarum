@@ -20,14 +20,15 @@ const PI = 3.141592;
 const TAU = PI * 2;
 
 
-let SA =                queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(22.5);
-let RA =                queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(22.5);
-let SO =                queryParams.has("so") ? queryParams.get("so") : 3;
-let evapourationSpeed = queryParams.has("es") ? queryParams.get("es") : 0.03;
-let speed =             queryParams.has("sp") ? queryParams.get("sp") : 1;
-let RED =               queryParams.has("re") ? queryParams.get("re") : 30;
-let GREEN =             queryParams.has("gr") ? queryParams.get("gr") : 128;
-let BLUE =              queryParams.has("bl") ? queryParams.get("bl") : 255;
+let SA =                 queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(35.5);
+let RA =                 queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(22.5);
+let SO =                 queryParams.has("so") ? queryParams.get("so") : 3;
+let evapourationAmount = queryParams.has("ea") ? queryParams.get("ea") : 0.90;
+let diffusionAmount    = queryParams.has("da") ? queryParams.get("da") : 0.98;
+let speed =              queryParams.has("sp") ? queryParams.get("sp") : 1;
+let RED =                queryParams.has("re") ? queryParams.get("re") : 50;
+let GREEN =              queryParams.has("gr") ? queryParams.get("gr") : 128;
+let BLUE =               queryParams.has("bl") ? queryParams.get("bl") : 255;
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -205,7 +206,7 @@ const updateFS = `#version 300 es
         }
         
         if (FR == 0. || FL == 0. || F == 0.) {
-            return h21(pos) * ${TAU};
+            return angle + ${PI - PI/4} + ${PI/2} * h21(pos);
         }
 
         float nextAngle = angle;
@@ -301,30 +302,31 @@ const trailFS = `#version 300 es
         ivec2 uv = ivec2(gl_FragCoord.xy);
         vec3 col = texelFetch(particleTexture, uv, 0).rgb;
 
+        vec4 prevColour = texelFetch(prevFrame, uv, 0);
+
         //draw particle current locations
         if (col.r + col.g + col.b != 0.) {
-            outColor = vec4(col, 1.0);
+            outColor = vec4(col, 1.0) * 0.2;
         }
-        else {
-            //diffusion
-            vec3 avg = vec3(0.);
-            float count = 0.;
-            for (int i = -1; i <= 1; ++i) {
-                for (int j = -1; j <= 1; ++j) {
-                    ivec2 location = ivec2(uv.x + i, uv.y + j);
+        
+        //diffusion
+        vec4 avg = vec4(0.);
+        float count = 0.;
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                ivec2 location = ivec2(uv.x + i, uv.y + j);
 
-                    if (inBounds(location)) {
-                        count += 1.;
-                        avg += texelFetch(prevFrame, location, 0).rgb;
-                    }
+                if (inBounds(location)) {
+                    count += 1.;
+                    avg += texelFetch(prevFrame, location, 0);
                 }
             }
-            avg /= count;
-            outColor = vec4(mix(col, avg, 1.), 1.);
-
-            float f = float(${evapourationSpeed});
-            outColor = outColor - vec4(vec3(f), 0.);
         }
+        avg /= count;
+
+        outColor += avg * ${diffusionAmount};
+
+        outColor *= ${evapourationAmount};
     }
 `;
 
