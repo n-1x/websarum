@@ -14,21 +14,49 @@
 "use strict"
 
 const queryParams = new URLSearchParams(window.location.search);
-const PARTICLE_TEXTURE_WIDTH = queryParams.has("wi") ? queryParams.get("wi") : 1000;
-const PARTICLE_TEXTURE_HEIGHT = queryParams.has("he") ? queryParams.get("he") : PARTICLE_TEXTURE_WIDTH;
+const PARTICLE_TEXTURE_WIDTH = queryGet("wi", 1000);
+const PARTICLE_TEXTURE_HEIGHT = queryGet("he", PARTICLE_TEXTURE_WIDTH);
 const PI = 3.141592;
 const TAU = PI * 2;
 
+function queryGet(name, defaultValue) {
+    return queryParams.has(name) ? queryParams.get(name) : defaultValue;
+}
 
-let SA =                 queryParams.has("sa") ? rad(queryParams.get("sa")) : rad(35.5);
-let RA =                 queryParams.has("ra") ? rad(queryParams.get("ra")) : rad(22.5);
-let SO =                 queryParams.has("so") ? queryParams.get("so") : 3;
-let evapourationAmount = queryParams.has("ea") ? queryParams.get("ea") : 0.90;
-let diffusionAmount    = queryParams.has("da") ? queryParams.get("da") : 0.98;
-let speed =              queryParams.has("sp") ? queryParams.get("sp") : 1;
-let RED =                queryParams.has("re") ? queryParams.get("re") : 50;
-let GREEN =              queryParams.has("gr") ? queryParams.get("gr") : 128;
-let BLUE =               queryParams.has("bl") ? queryParams.get("bl") : 255;
+function randRange(min, max) {
+    return min + (max-min) * Math.random();
+}
+
+
+// Randomised settings
+// const settings = {
+//     sa: degToRad(queryGet("sa", randRange(2, 46))),
+//     ra: degToRad(queryGet("ra", randRange(2, 45))),
+//     so: queryGet("so", randRange(1,15)),
+//     ev: queryGet("ev", randRange(0.01, 0.1)),
+//     di: queryGet("di", randRange(0, 1.0)),
+//     de: queryGet("de", randRange(0.01, 0.1)),
+//     sp: queryGet("sp", randRange(1, 1.5)),
+//     r: queryGet("r", randRange(0, 255)),
+//     g: queryGet("g", randRange(0, 255)),
+//     b: queryGet("bl", randRange(0, 255))
+// }
+
+// cool default found through randomisation and tweaking
+const settings = {
+    "sa": 0.7293676131420829,
+    "ra": 0.07387069048844963,
+    "so": 4.176340105224286,
+    "ev": 0.060455427143575616,
+    "di": 0.5932270870091989,
+    "de": 0.0729272095616078,
+    "sp": 1.2438031576006956,
+    "r": 199.05355377170184,
+    "g": 126.79127178568665,
+    "b": 25.835185348155772
+ }
+
+console.log(JSON.stringify(settings, null, 3));
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -83,13 +111,14 @@ function getIndicesData(width, height) {
 function getStartingStateImage() {
     const imageData = new Float32Array(
         PARTICLE_TEXTURE_HEIGHT * PARTICLE_TEXTURE_WIDTH * 4);
-    const size = 400;
+    const size = Math.min(window.innerWidth,window.innerHeight)/3;
 
     for (let i = 0; i < imageData.length; i += 4) {
         const angle = Math.random() * TAU;
-        imageData[i] =   canvas.width / 2 +  Math.random() * size * Math.cos(angle);    //x pos
-        imageData[i+1] = canvas.height / 2 + Math.random() * size * Math.sin(angle); // y pos
-        imageData[i+2] = angle + PI;
+        const randomSize = Math.random() * size;
+        imageData[i]   =   canvas.width / 2  + randomSize * Math.cos(angle);    //x pos
+        imageData[i+1] =   canvas.height / 2 + randomSize * Math.sin(angle); // y pos
+        imageData[i+2] =   angle;
         // imageData[i+3] = 0; //free space for now
     }
 
@@ -126,7 +155,7 @@ function initialiseRenderTexture(gl, texture, width, height, data) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 }
 
-function rad(deg) {
+function degToRad(deg) {
     return deg * (PI / 180);
 }
 
@@ -181,9 +210,9 @@ const updateFS = `#version 300 es
     }
 
     float getNextAngle(vec2 pos, float angle) {
-        float SO = float(${SO});
-        float SA = float(${SA});
-        float RA = float(${RA});
+        float SO = float(${settings.so});
+        float SA = float(${settings.sa});
+        float RA = float(${settings.ra});
         float leftAngle = angle + SA;
         float rightAngle = angle - SA;
 
@@ -233,7 +262,7 @@ const updateFS = `#version 300 es
         vec2 pos = data.xy;
         float angle = data.z;
 
-        float speed = float(${speed});
+        float speed = float(${settings.sp});
         vec2 velocity = vec2(speed * cos(angle), speed * sin(angle));
 
         pos += velocity; //TODO MULTIPLY BY DT
@@ -274,7 +303,7 @@ const drawFS = `#version 300 es
     out vec4 outColor;
 
     void main() {
-        outColor = vec4(${RED/255}, ${GREEN/255}, ${BLUE/255}, 1.0);
+        outColor = vec4(${settings.r/255}, ${settings.g/255}, ${settings.b/255}, 1.) * ${settings.de};
     }
 `;
 
@@ -303,30 +332,32 @@ const trailFS = `#version 300 es
         vec3 col = texelFetch(particleTexture, uv, 0).rgb;
 
         vec4 prevColour = texelFetch(prevFrame, uv, 0);
+        float depositAmount = 0.8;
 
         //draw particle current locations
         if (col.r + col.g + col.b != 0.) {
-            outColor = vec4(col, 1.0) * 0.2;
+           outColor = prevColour + vec4(col, 1.0);
         }
-        
-        //diffusion
-        vec4 avg = vec4(0.);
-        float count = 0.;
-        for (int i = -1; i <= 1; ++i) {
-            for (int j = -1; j <= 1; ++j) {
-                ivec2 location = ivec2(uv.x + i, uv.y + j);
-
-                if (inBounds(location)) {
-                    count += 1.;
-                    avg += texelFetch(prevFrame, location, 0);
+        else {
+            //diffusion
+            vec4 avg = vec4(0.);
+            int count = 0;
+            for (int i = -1; i <= 1; ++i) {
+                for (int j = -1; j <= 1; ++j) {
+                    ivec2 location = ivec2(uv.x + i, uv.y + j);
+    
+                    if (inBounds(location)) {
+                        count += 1;
+                        avg += texelFetch(prevFrame, location, 0);
+                    }
                 }
             }
+    
+            avg /= float(count);
+            outColor = mix(prevColour, avg, ${settings.di});
+            outColor = max(vec4(0), outColor - ${settings.ev});
         }
-        avg /= count;
-
-        outColor += avg * ${diffusionAmount};
-
-        outColor *= ${evapourationAmount};
+        
     }
 `;
 
