@@ -41,22 +41,20 @@ function randRange(min, max) {
 //     g: queryGet("g", randRange(0, 255)),
 //     b: queryGet("bl", randRange(0, 255))
 // }
+// console.log(JSON.stringify(settings, null, 3));
 
-// cool default found through randomisation and tweaking
 const settings = {
-    "sa": 0.7293676131420829,
-    "ra": 0.07387069048844963,
-    "so": 4.176340105224286,
-    "ev": 0.060455427143575616,
-    "di": 0.5932270870091989,
-    "de": 0.0729272095616078,
-    "sp": 1.2438031576006956,
-    "r": 199.05355377170184,
-    "g": 126.79127178568665,
-    "b": 25.835185348155772
- }
-
-console.log(JSON.stringify(settings, null, 3));
+    sa: degToRad(queryGet("sa", 41.78968599432358)),
+    ra: degToRad(queryGet("ra", 4.232478866903663)),
+    so:          queryGet("so", 4.176340105224286),
+    ev:          queryGet("ev", 0.060455427143575616),
+    di:          queryGet("di", 0.5932270870091989),
+    de:          queryGet("de", 0.0729272095616078),
+    sp:          queryGet("sp", 1.2438031576006956),
+    r:           queryGet("r",  199.05355377170184),
+    g:           queryGet("g",  126.79127178568665),
+    b:           queryGet("b",  25.835185348155772)
+}
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
