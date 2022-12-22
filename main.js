@@ -41,14 +41,8 @@ function randRange(min, max) {
     return min + (max - min) * Math.random();
 }
 
-function logSettings(s) {
-    const radToDeg = x => x / (Math.PI / 180);
-    const convertedSettings = {
-        ...s,
-        sa: radToDeg(s.sa),
-        ra: radToDeg(s.ra),
-    };
-    console.log(JSON.stringify(convertedSettings, null, 2));
+function logSettings() {
+    console.log(JSON.stringify(settings, null, 4));
 }
 
 function getQueryStringForCurrentSettings() {
@@ -196,6 +190,18 @@ const presets = {
         "r": 65.8377,
         "g": 92.7125,
         "b": 34.9513
+    },
+    "Wisps": {
+        "sa": 0.4998,
+        "ra": 0.3449,
+        "so": 4.5187,
+        "er": 0.0391,
+        "dr": 0.0835,
+        "ds": 0.0856,
+        "s": 1.0254,
+        "r": 11.4972,
+        "g": 68.0937,
+        "b": 151.2045
     }
 };
 
