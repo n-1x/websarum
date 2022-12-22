@@ -38,7 +38,7 @@ function queryGet(name, defaultValue) {
 }
 
 function randRange(min, max) {
-    return min + (max-min) * Math.random();
+    return min + (max - min) * Math.random();
 }
 
 function logSettings(s) {
@@ -51,104 +51,198 @@ function logSettings(s) {
     console.log(JSON.stringify(convertedSettings, null, 2));
 }
 
+function getQueryStringForCurrentSettings() {
+    return Object.entries(settings).map(([name, value]) => {
+        return `${name}=${parseFloat(value).toFixed(4)}`
+    }).join("&");
+}
+
+function updateQueryParameters() {
+    try {
+        window.history.replaceState(null, null, `?${getQueryStringForCurrentSettings()}`);
+    }
+    catch { }
+}
+
 const presets = {
     "Roots": {
         "sa": 0.7272388796709374,
         "ra": 0.45623959819739646,
         "so": 5.208635091449514,
-        "ev": 0.01332048284950104,
-        "di": 0.30593743234632764,
-        "de": 0.07263061471097229,
-        "sp": 1.345430128476753,
+        "er": 0.01332048284950104,
+        "dr": 0.30593743234632764,
+        "ds": 0.07263061471097229,
+        "s": 1.345430128476753,
         "r": 131.97661095637793,
         "g": 178.58837511685653,
         "b": 54.275563444613056
     },
-    "Purple Dust": {
+    "Sparkler": {
         "sa": 0.6276633577000122,
         "ra": 0.4770540755207435,
         "so": 3.0552513505748156,
-        "ev": 0.09124361600785168,
-        "di": 0.173742195917986,
-        "de": 0.06671315822692318,
-        "sp": 1.1332474460691877,
+        "er": 0.09124361600785168,
+        "dr": 0.173742195917986,
+        "ds": 0.06671315822692318,
+        "s": 1.1332474460691877,
         "r": 59.100403196639405,
         "g": 24.144773716014345,
         "b": 90.86011760619417
-     },
-     "Fireball": {
+    },
+    "Fireball": {
         "sa": 0.26024361570502,
         "ra": 0.7591674383997613,
         "so": 2.788681454531885,
-        "ev": 0.09265237764768487,
-        "di": 0.313245429509618,
-        "de": 0.049803181549129376,
-        "sp": 1.1317696668780441,
+        "er": 0.09265237764768487,
+        "dr": 0.313245429509618,
+        "ds": 0.049803181549129376,
+        "s": 1.1317696668780441,
         "r": 235.59117142610606,
         "g": 142.9355650445792,
         "b": 19.26220731473137
-     },
-     "Alien": {
+    },
+    "Alien": {
         "sa": 0.7302706841151516,
         "ra": 0.40834815531032354,
         "so": 6.836371979106925,
-        "ev": 0.07665430709950119,
-        "di": 0.284695495518407,
-        "de": 0.029248702870850546,
-        "sp": 1.4811268680587457,
+        "er": 0.07665430709950119,
+        "dr": 0.284695495518407,
+        "ds": 0.029248702870850546,
+        "s": 1.4811268680587457,
         "r": 132.24931810537421,
         "g": 244.07791933657685,
         "b": 101.23515778679135
-     },
-     "Nova": {
+    },
+    "Nova": {
         "sa": 0.6857024720776844,
         "ra": 0.18271661490918428,
         "so": 3.489764781939051,
-        "ev": 0.0307725715723038,
-        "di": 0.15906093206727567,
-        "de": 0.09267362322560109,
-        "sp": 1.4691590009048343,
+        "er": 0.0307725715723038,
+        "dr": 0.15906093206727567,
+        "ds": 0.09267362322560109,
+        "s": 1.4691590009048343,
         "r": 245.50781582020457,
         "g": 40.41057446158983,
         "b": 139.43774913406622
-     },
-     "Doodle": {
+    },
+    "Energy": {
         "sa": 0.2172069170954646,
         "ra": 0.24686645320061174,
         "so": 4.7708204305785875,
-        "ev": 0.07821360586696352,
-        "di": 0.6324835441176011,
-        "de": 0.07914353570477804,
-        "sp": 1.321075048845392,
+        "er": 0.07821360586696352,
+        "dr": 0.6324835441176011,
+        "ds": 0.07914353570477804,
+        "s": 1.321075048845392,
         "r": 126.20794601249571,
         "g": 106.17011970230016,
         "b": 215.8979104797793
-     },
-     "Slime Mould": {
+    },
+    "Mycelium": {
         "sa": 0.35950298128423797,
         "ra": 0.6125719378381128,
         "so": 3.407364712537294,
-        "ev": 0.047558536332927864,
-        "di": 0.2120679558116123,
-        "de": 0.04254278859268712,
-        "sp": 1.0487097459011205,
+        "er": 0.047558536332927864,
+        "dr": 0.2120679558116123,
+        "ds": 0.04254278859268712,
+        "s": 1.0487097459011205,
         "r": 253.2030708655348,
         "g": 249.0895000709562,
         "b": 170.51777903070285
-     },
-     "Gold Dust": {
+    },
+    "Gold Dust": {
         "sa": 0.5099381191157555,
         "ra": 0.10260424538945051,
         "so": 11.015375727893089,
-        "ev": 0.04505093643124657,
-        "di": 0.9526744269888571,
-        "de": 0.021202752156016476,
-        "sp": 1.3046814098923678,
+        "er": 0.04505093643124657,
+        "dr": 0.9526744269888571,
+        "ds": 0.021202752156016476,
+        "s": 1.3046814098923678,
         "r": 199.45578281614002,
         "g": 201.4868621391769,
         "b": 144.3360202997715
-     }
+    },
+    "Life": {
+        "sa": 0.59,
+        "ra": 0.09,
+        "so": 2.7887,
+        "er": 0.0927,
+        "dr": 0.3132,
+        "ds": 0.0498,
+        "s": 1.1318,
+        "r": 57.6500,
+        "g": 142.9356,
+        "b": 19.2622
+    },
+    "Water": {
+        "sa": 0.31,
+        "ra": 0.37,
+        "so": 6.1500,
+        "er": 0.1000,
+        "dr": 0.1737,
+        "ds": 0.0667,
+        "s": 1.1332,
+        "r": 0.0000,
+        "g": 24.1448,
+        "b": 255.0000
+    },
+    "Growth": {
+        "sa": 0.5861,
+        "ra": 0.7287,
+        "so": 1.9768,
+        "er": 0.0108,
+        "dr": 0.2189,
+        "ds": 0.0393,
+        "s": 1.2529,
+        "r": 65.8377,
+        "g": 92.7125,
+        "b": 34.9513
+    }
 };
+
+const settingsConfig = {
+    "Search Angle": {
+        min: 0,
+        max: Math.PI / 4,
+        convert: degToRad
+    },
+    "Rotate Angle": {
+        min: 0,
+        max: Math.PI / 4,
+        convert: degToRad
+    },
+    "Search Offset": {
+        min: 1,
+        max: 15
+    },
+    "Evapouration Rate": {
+        min: 0.01,
+        max: 0.1
+    },
+    "Diffusion Rate": {
+        min: 0,
+        max: 1.0
+    },
+    "Deposit Strength": {
+        min: 0.01,
+        max: 0.1
+    },
+    "Speed": {
+        min: 1,
+        max: 1.5
+    },
+    "Red": {
+        min: 0,
+        max: 255
+    },
+    "Green": {
+        min: 0,
+        max: 255
+    },
+    "Blue": {
+        min: 0,
+        max: 255
+    }
+}
 
 // Randomised settings
 // const settings = {
@@ -177,20 +271,8 @@ const presets = {
 //     "b": 170.51777903070285
 //   }
 
-const settings = {
-    sa: degToRad(queryGet("sa", 20.59800783525131)),
-    ra: degToRad(queryGet("ra", 35.097793988162785)),
-    so:          queryGet("so", 3.407364712537294),
-    ev:          queryGet("ev", 0.047558536332927864),
-    di:          queryGet("di", 0.2120679558116123),
-    de:          queryGet("de", 0.04254278859268712),
-    sp:          queryGet("sp", 1.0487097459011205),
-    r:           queryGet("r",  253.2030708655348),
-    g:           queryGet("g",  249.0895000709562),
-    b:           queryGet("b",  170.51777903070285)
-}
-
-logSettings(settings);
+const settings = { ...presets["Mycelium"] };
+Object.assign(settings, Object.fromEntries(queryParams.entries()));
 
 function loadShader(gl, type, source) {
     const shader = gl.createShader(type);
@@ -233,9 +315,9 @@ function getIndicesData(width, height) {
     for (let h = 0; h < height; ++h) {
         for (let w = 0; w < width; ++w) {
             const i = h * 2 * width + w * 2;
-            
+
             data[i] = w;
-            data[i+1] = h;
+            data[i + 1] = h;
         }
     }
 
@@ -245,14 +327,14 @@ function getIndicesData(width, height) {
 function getStartingStateImage() {
     const imageData = new Float32Array(
         PARTICLE_TEXTURE_HEIGHT * PARTICLE_TEXTURE_WIDTH * 4);
-    const size = Math.min(window.innerWidth,window.innerHeight)/3;
+    const size = Math.min(window.innerWidth, window.innerHeight) / 3;
 
     for (let i = 0; i < imageData.length; i += 4) {
         const angle = Math.random() * Math.PI * 2;
         const randomSize = Math.random() * size;
-        imageData[i]   =   canvas.width / 2  + randomSize * Math.cos(angle);    //x pos
-        imageData[i+1] =   canvas.height / 2 + randomSize * Math.sin(angle); // y pos
-        imageData[i+2] =   angle;
+        imageData[i] = canvas.width / 2 + randomSize * Math.cos(angle);    //x pos
+        imageData[i + 1] = canvas.height / 2 + randomSize * Math.sin(angle); // y pos
+        imageData[i + 2] = angle;
         // imageData[i+3] = 0; //free space for now
     }
 
@@ -547,7 +629,7 @@ function updateParticles(gl, state, worldTexture) {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, state.particleTexture2);
     gl.uniform1i(state.uniforms.prevState, 1);
-    
+
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, worldTexture);
     gl.uniform1i(state.uniforms.world, 2);
@@ -556,7 +638,7 @@ function updateParticles(gl, state, worldTexture) {
     gl.uniform1f(state.uniforms.searchOffset, settings.so);
     gl.uniform1f(state.uniforms.searchAngle, settings.sa);
     gl.uniform1f(state.uniforms.rotateAngle, settings.ra);
-    gl.uniform1f(state.uniforms.speed, settings.sp);
+    gl.uniform1f(state.uniforms.speed, settings.s);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, state.quadBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadData, gl.STATIC_DRAW);
@@ -567,10 +649,10 @@ function updateParticles(gl, state, worldTexture) {
     gl.viewport(0, 0, PARTICLE_TEXTURE_WIDTH, PARTICLE_TEXTURE_HEIGHT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    [state.particleTexture1, state.particleTexture2] = 
-        [state.particleTexture2, state.particleTexture1]; 
+    [state.particleTexture1, state.particleTexture2] =
+        [state.particleTexture2, state.particleTexture1];
 }
-    
+
 function drawParticles(gl, state) {
     gl.useProgram(state.program);
 
@@ -579,14 +661,14 @@ function drawParticles(gl, state) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, state.framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
         gl.TEXTURE_2D, state.texture, 0);
-        
+
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, state.particleTexture1);
     gl.uniform1i(state.uniforms.state, 1);
 
     gl.uniform2i(state.uniforms.canvasSize, gl.canvas.width, gl.canvas.height);
-    gl.uniform3f(state.uniforms.colour, settings.r/255, settings.g/255, settings.b/255);
-    gl.uniform1f(state.uniforms.de, settings.de);
+    gl.uniform3f(state.uniforms.colour, settings.r / 255, settings.g / 255, settings.b / 255);
+    gl.uniform1f(state.uniforms.de, settings.ds);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, state.indexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
@@ -620,8 +702,8 @@ function updateTrails(gl, state) {
     gl.uniform1i(state.uniforms.prevFrame, 2);
 
     gl.uniform2i(state.uniforms.canvasSize, gl.canvas.width, gl.canvas.height);
-    gl.uniform1f(state.uniforms.diffusion, settings.di);
-    gl.uniform1f(state.uniforms.evapouration, settings.ev);
+    gl.uniform1f(state.uniforms.diffusion, settings.dr);
+    gl.uniform1f(state.uniforms.evapouration, settings.er);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, state.quadBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadData, gl.STATIC_DRAW);
@@ -661,15 +743,15 @@ function draw(gl, updateState, drawState, trailState, renderState) {
     updateTrails(gl, trailState);
     render(gl, renderState, trailState.outTexture);
 
-    [trailState.outTexture, trailState.prevFrameTexture] = 
+    [trailState.outTexture, trailState.prevFrameTexture] =
         [trailState.prevFrameTexture, trailState.outTexture];
 
-    window.requestAnimationFrame(() => { 
-        draw(gl, updateState, drawState, trailState, renderState); 
+    window.requestAnimationFrame(() => {
+        draw(gl, updateState, drawState, trailState, renderState);
     });
 }
 
-function init(width, height) {
+function initCanvas(width, height) {
     const canvas = document.getElementById("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -683,7 +765,7 @@ function init(width, height) {
     if (!gl.getExtension('EXT_color_buffer_float')) {
         return alert('Failed to find extension EXT_color_buffer_float. Use a more up-to-date browser.');
     }
-    
+
     console.log("Initialising update shader program");
     const updateProgram = initShaderProgram(gl, updateVS, updateFS);
 
@@ -700,7 +782,7 @@ function init(width, height) {
 
     const particleTexture1 = gl.createTexture();
     const particleTexture2 = gl.createTexture();
-    
+
     const updatePosAttribLoc = gl.getAttribLocation(updateProgram, "position");
     const drawPosAttribLoc = gl.getAttribLocation(drawProgram, "index");
     const trailVertexAttribLoc = gl.getAttribLocation(trailProgram, "position");
@@ -775,10 +857,10 @@ function init(width, height) {
     const startingStateImage = getStartingStateImage();
     const emptyCanvas = new Uint8Array(width * height * 3);
 
-    initialiseRenderTexture(gl, particleTexture1, 
+    initialiseRenderTexture(gl, particleTexture1,
         PARTICLE_TEXTURE_WIDTH, PARTICLE_TEXTURE_HEIGHT, startingStateImage);
 
-    initialiseRenderTexture(gl, particleTexture2, 
+    initialiseRenderTexture(gl, particleTexture2,
         PARTICLE_TEXTURE_WIDTH, PARTICLE_TEXTURE_HEIGHT, startingStateImage);
 
     gl.bindTexture(gl.TEXTURE_2D, drawnParticlesTexture);
@@ -837,14 +919,132 @@ function init(width, height) {
     else {
         draw(gl, updateState, drawState, trailState, renderState);
     }
+}
 
+function initParameterWindow() {
+    const paramDiv = document.getElementById("param-list");
+    const inputMap = {};
+
+    const select = document.createElement("select");
+    const startingLabel = document.createElement("option");
+    startingLabel.innerText = "Select a preset";
+    select.appendChild(startingLabel);
+
+    // add presets
+    for (const name of Object.keys(presets)) {
+        const option = document.createElement("option");
+        option.innerText = name;
+        select.appendChild(option);
+    }
+
+    select.onchange = e => {
+        if (e.target.selectedIndex !== 0) {
+            const preset = presets[e.target.value];
+            for (const [name, value] of Object.entries(preset)) {
+                settings[name] = value;
+
+                if (inputMap[name]) {
+                    inputMap[name].value = value;
+                }
+            }
+            updateQueryParameters();
+        }
+    };
+
+    paramDiv.appendChild(select);
+    paramDiv.appendChild(document.createElement("br"));
+    const getShortName = s => s.split(" ").map(w => w[0].toLowerCase()).join("");
+
+    for (const [longName, config] of Object.entries(settingsConfig)) {
+        const shortName = getShortName(longName);
+        const label = document.createElement("label");
+        label.innerText = longName;
+
+        const input = document.createElement("input");
+        input.type = "range";
+        input.min = config.min;
+        input.max = config.max;
+        input.step = 0.01;
+        input.value = settings[shortName];
+        input.oninput = e => {
+            const newValue = parseFloat(e.target.value);
+            settings[shortName] = newValue;
+            updateQueryParameters();
+        };
+        inputMap[shortName] = input;
+
+        paramDiv.appendChild(label);
+        paramDiv.appendChild(input);
+        paramDiv.appendChild(document.createElement("br"))
+    }
+
+    const randomButton = document.createElement("button");
+    randomButton.innerText = "Randomise parameters";
+    randomButton.onclick = () => {
+        for (const [longName, config] of Object.entries(settingsConfig)) {
+            const shortName = getShortName(longName);
+            const newValue = randRange(config.min, config.max);
+            settings[shortName] = newValue;
+            inputMap[shortName].value = newValue;
+        }
+        updateQueryParameters();
+    };
+    paramDiv.appendChild(randomButton);
 }
 
 window.onload = () => {
+    initParameterWindow();
     // For some reason the gl textures only work if the width
     // is divisible by four, so here we round down to the nearest
     // multiple.
-    const windowWidth = window.innerWidth;
-    const canvasWidth = windowWidth & ~0b11;
-    init(canvasWidth, window.innerHeight);
+    const canvasWidth = window.innerWidth & ~0b11;
+    initCanvas(canvasWidth, window.innerHeight);
 };
+
+// Draggable window
+let currentWindow = null;
+let dragStart = null;
+let dragOffset = null;
+
+window.onmousedown = e => {
+    if (e.target.classList.contains('drag-header')) {
+        currentWindow = e.target.parentNode;
+        const { x, y } = currentWindow.getBoundingClientRect();
+        dragOffset = [window.mouseX - x, window.mouseY - y];
+        dragStart = [window.mouseX - dragOffset[0], window.mouseY - dragOffset[1]];
+    }
+}
+
+window.onmouseup = e => {
+    currentWindow = null;
+}
+
+window.onmousemove = e => {
+    window.mouseX = e.clientX;
+    window.mouseY = e.clientY;
+
+    if (currentWindow) {
+        const dx = window.mouseX - dragStart[0];
+        const dy = window.mouseY - dragStart[1];
+        const { x, y } = currentWindow.getBoundingClientRect();
+        const newX = x + dx - dragOffset[0];
+        const newY = y + dy - dragOffset[1];
+
+        currentWindow.style.left = `${newX}px`;
+        currentWindow.style.top = `${newY}px`;
+        dragStart = [newX, newY];
+    }
+};
+
+window.onkeydown = e => {
+    if (e.key.toLowerCase() === "p") {
+        const paramWindow = document.getElementById("param-window");
+
+        if (paramWindow.style.display === "") {
+            paramWindow.style.display = "none";
+        }
+        else {
+            paramWindow.style.display = "";
+        }
+    }
+}

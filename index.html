@@ -8,11 +8,49 @@
             body {
                 margin: 0;
                 background-color: black;
+                font-family: sans-serif;
+                overflow: hidden;
+            }
+
+            .drag-window {
+                position: absolute;
+                left: 20px;
+                top: 20px;
+                width: 500px;
+                background-color: rgba(62, 62, 78, 0.9);
+                color: white;
+                resize: both;
+                overflow: hidden;
+                border-radius: 5px;
+                user-select: none;
+            }
+            
+            .drag-header {
+                background-color: rgb(48, 48, 90);
+                height: 20px;
+                padding: 5px;
+            }
+
+            .drag-body {
+                padding: 5px;
+            }
+            
+            input {
+                display: inline-block;
+                vertical-align: middle;
             }
         </style>
     </head>
 
     <body>
+        <div id="param-window" class="drag-window">
+            <div class="drag-header">
+                Parameters (p to toggle)
+            </div>
+            <div class="drag-body">
+                <div id="param-list"></div>
+            </div>
+        </div>
         <canvas id="canvas" width="320" height="180"></canvas>
     </body>
 </html>
