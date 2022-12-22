@@ -32,8 +32,6 @@ RENDER
 const queryParams = new URLSearchParams(window.location.search);
 const PARTICLE_TEXTURE_WIDTH = queryGet("wi", 1000);
 const PARTICLE_TEXTURE_HEIGHT = queryGet("he", PARTICLE_TEXTURE_WIDTH);
-const PI = 3.141592;
-const TAU = PI * 2;
 
 function queryGet(name, defaultValue) {
     return queryParams.has(name) ? queryParams.get(name) : defaultValue;
@@ -250,7 +248,7 @@ function getStartingStateImage() {
     const size = Math.min(window.innerWidth,window.innerHeight)/3;
 
     for (let i = 0; i < imageData.length; i += 4) {
-        const angle = Math.random() * TAU;
+        const angle = Math.random() * Math.PI * 2;
         const randomSize = Math.random() * size;
         imageData[i]   =   canvas.width / 2  + randomSize * Math.cos(angle);    //x pos
         imageData[i+1] =   canvas.height / 2 + randomSize * Math.sin(angle); // y pos
@@ -292,7 +290,7 @@ function initialiseRenderTexture(gl, texture, width, height, data) {
 }
 
 function degToRad(deg) {
-    return deg * (PI / 180);
+    return deg * (Math.PI / 180);
 }
 
 const updateVS = `#version 300 es
@@ -308,10 +306,16 @@ const updateVS = `#version 300 es
 const updateFS = `#version 300 es
     precision highp float;
 
+    #define PI ${Math.PI}
+
     out vec4 outColour;
     uniform sampler2D prevState;
     uniform sampler2D world;
     uniform ivec2 canvasSize;
+    uniform float searchOffset;
+    uniform float searchAngle;
+    uniform float rotateAngle;
+    uniform float speed;
 
     float h21(vec2 p) {
         float f = dot(p,sin(p + 4.112355738918707) * 9.32761923879);
@@ -346,9 +350,9 @@ const updateFS = `#version 300 es
     }
 
     float getNextAngle(vec2 pos, float angle) {
-        float SO = float(${settings.so});
-        float SA = float(${settings.sa});
-        float RA = float(${settings.ra});
+        float SO = searchOffset;
+        float SA = searchAngle;
+        float RA = rotateAngle;
         float leftAngle = angle + SA;
         float rightAngle = angle - SA;
 
@@ -371,7 +375,7 @@ const updateFS = `#version 300 es
         }
         
         if (FR == 0. || FL == 0. || F == 0.) {
-            return angle + ${PI - PI/4} + ${PI/2} * h21(pos);
+            return angle + (PI - PI/4.) + (PI/2.) * h21(pos);
         }
 
         float nextAngle = angle;
@@ -381,7 +385,7 @@ const updateFS = `#version 300 es
         }
         else if (F < FL && F < FR) {
             float random = h21(pos);
-            nextAngle += (random >= 0.5 ? 1. : -1.) * RA; //TODO * DT
+            nextAngle += (random >= 0.5 ? 1. : -1.) * RA;
         }
         else if (FL > FR) {
             nextAngle += RA;
@@ -398,10 +402,9 @@ const updateFS = `#version 300 es
         vec2 pos = data.xy;
         float angle = data.z;
 
-        float speed = float(${settings.sp});
         vec2 velocity = vec2(speed * cos(angle), speed * sin(angle));
 
-        pos += velocity; //TODO MULTIPLY BY DT
+        pos += velocity;
 
         if (inBounds(ivec2(pos))) {
             angle = getNextAngle(pos, angle);
@@ -410,7 +413,7 @@ const updateFS = `#version 300 es
             float width = float(canvasSize.x);
             float height = float(canvasSize.y);
 
-            angle = h21(pos) * ${TAU};
+            angle = h21(pos) * PI * 2.;
         }
 
         outColour = vec4(pos, angle, 1.);
@@ -436,10 +439,13 @@ const drawVS = `#version 300 es
 const drawFS = `#version 300 es
     precision highp float; // TODO: play around removing these
     
+    uniform float de;
+    uniform vec3 colour;
+    
     out vec4 outColor;
 
     void main() {
-        outColor = vec4(${settings.r/255}, ${settings.g/255}, ${settings.b/255}, 1.) * ${settings.de};
+        outColor = vec4(colour, 1.0) * de;
     }
 `;
 
@@ -458,6 +464,8 @@ const trailFS = `#version 300 es
     uniform sampler2D particleTexture;
     uniform sampler2D prevFrame;
     uniform ivec2 canvasSize;
+    uniform float diffusion;
+    uniform float evapouration;
 
     bool inBounds(ivec2 p) {
         return p.x >= 0 && p.x < canvasSize.x && p.y >= 0 && p.y < canvasSize.y;
@@ -491,8 +499,8 @@ const trailFS = `#version 300 es
             }
     
             avg /= float(count);
-            outColor = mix(prevColour, avg, ${settings.di});
-            outColor = max(vec4(0), outColor - ${settings.ev});
+            outColor = mix(prevColour, avg, diffusion);
+            outColor = max(vec4(0), outColor - evapouration);
         }
         
     }
@@ -545,7 +553,11 @@ function updateParticles(gl, state, worldTexture) {
     gl.uniform1i(state.uniforms.world, 2);
 
     gl.uniform2i(state.uniforms.canvasSize, gl.canvas.width, gl.canvas.height);
-    
+    gl.uniform1f(state.uniforms.searchOffset, settings.so);
+    gl.uniform1f(state.uniforms.searchAngle, settings.sa);
+    gl.uniform1f(state.uniforms.rotateAngle, settings.ra);
+    gl.uniform1f(state.uniforms.speed, settings.sp);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, state.quadBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadData, gl.STATIC_DRAW);
     gl.bindVertexArray(state.vao);
@@ -573,6 +585,8 @@ function drawParticles(gl, state) {
     gl.uniform1i(state.uniforms.state, 1);
 
     gl.uniform2i(state.uniforms.canvasSize, gl.canvas.width, gl.canvas.height);
+    gl.uniform3f(state.uniforms.colour, settings.r/255, settings.g/255, settings.b/255);
+    gl.uniform1f(state.uniforms.de, settings.de);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, state.indexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, indicesData, gl.STATIC_DRAW);
@@ -606,6 +620,8 @@ function updateTrails(gl, state) {
     gl.uniform1i(state.uniforms.prevFrame, 2);
 
     gl.uniform2i(state.uniforms.canvasSize, gl.canvas.width, gl.canvas.height);
+    gl.uniform1f(state.uniforms.diffusion, settings.di);
+    gl.uniform1f(state.uniforms.evapouration, settings.ev);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, state.quadBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadData, gl.STATIC_DRAW);
@@ -704,7 +720,11 @@ function init(width, height) {
         uniforms: getUniforms(gl, updateProgram, [
             "prevState",
             "canvasSize",
-            "world"
+            "world",
+            "searchOffset",
+            "searchAngle",
+            "rotateAngle",
+            "speed"
         ]),
     };
 
@@ -718,7 +738,9 @@ function init(width, height) {
         drawPosAttribLoc,
         uniforms: getUniforms(gl, drawProgram, [
             "state",
-            "canvasSize"
+            "canvasSize",
+            "colour",
+            "de"
         ]),
     };
 
@@ -734,7 +756,9 @@ function init(width, height) {
         uniforms: getUniforms(gl, trailProgram, [
             "particleTexture",
             "canvasSize",
-            "prevFrame"
+            "prevFrame",
+            "diffusion",
+            "evapouration"
         ]),
     };
 
