@@ -164,7 +164,7 @@ function initialiseRenderTexture(gl, texture, width, height, data) {
         0              // srcOffset
     );
 
-    //egba32f is not texture_filterable, so disable filtering
+    //rgba32f is not texture_filterable, so disable filtering
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 }
@@ -350,7 +350,8 @@ const trailFS = `#version 300 es
 
         //draw particle current locations
         if (col.r + col.g + col.b != 0.) {
-           outColor = prevColour + vec4(col, 1.0);
+            float prevBrightness = (prevColour.r + prevColour.g + prevColour.b) / 3.0;
+            outColor = prevColour + vec4(col, 1.0) / prevBrightness;
         }
         else {
             //diffusion
