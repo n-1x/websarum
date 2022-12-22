@@ -530,10 +530,10 @@ function draw(gl, updateState, drawState, trailState, renderState) {
     });
 }
 
-function init() {
-    const canvas = document.querySelector("#canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+function init(width, height) {
+    const canvas = document.getElementById("canvas");
+    canvas.width = width;
+    canvas.height = height;
     const gl = canvas.getContext("webgl2");
 
     if (!gl) {
@@ -626,7 +626,7 @@ function init() {
     };
 
     const startingStateImage = getStartingStateImage();
-    const emptyCanvas = new Uint8Array(canvas.width * canvas.height * 3);
+    const emptyCanvas = new Uint8Array(width * height * 3);
 
     initialiseRenderTexture(gl, particleTexture1, 
         PARTICLE_TEXTURE_WIDTH, PARTICLE_TEXTURE_HEIGHT, startingStateImage);
@@ -639,8 +639,8 @@ function init() {
         gl.TEXTURE_2D,    // target
         0,                // level
         gl.RGB,           // internalformat
-        canvas.width,     // width
-        canvas.height,    // height
+        width,            // width
+        height,           // height
         0,                // border
         gl.RGB,           // format
         gl.UNSIGNED_BYTE, // type 
@@ -655,8 +655,8 @@ function init() {
         gl.TEXTURE_2D,    // target
         0,                // level
         gl.RGB,           // internalformat
-        canvas.width,     // width
-        canvas.height,    // height
+        width,            // width
+        height,           // height
         0,                // border
         gl.RGB,           // format
         gl.UNSIGNED_BYTE, // type 
@@ -671,8 +671,8 @@ function init() {
         gl.TEXTURE_2D,    // target
         0,                // level
         gl.RGB,           // internalformat
-        canvas.width,     // width
-        canvas.height,    // height
+        width,            // width
+        height,           // height
         0,                // border
         gl.RGB,           // format
         gl.UNSIGNED_BYTE, // type 
@@ -682,7 +682,22 @@ function init() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
+    const error = gl.getError();
+
+    if (error) {
+        document.write(`Unable to initialise, error ${error}`);
+    }
+    else {
     draw(gl, updateState, drawState, trailState, renderState);
 }
 
-window.onload = init;
+}
+
+window.onload = () => {
+    // For some reason the gl textures only work if the width
+    // is divisible by four, so here we round down to the nearest
+    // multiple.
+    const windowWidth = window.innerWidth;
+    const canvasWidth = windowWidth & ~0b11;
+    init(canvasWidth, window.innerHeight);
+};
