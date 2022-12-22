@@ -1,15 +1,31 @@
 //Author: Nicholas Dean
-//Update step takes an where one pixel contains
-//the position and angle of each particle. Updates the position
-//and angle and draws this to a texture.
-//draw step is needed to take the particle state texture
-//and draw the individual particles on a bufffer.
-//then, the trail step sopies that buffer, applies blur
-//and isn't cleared each frame. This simulates diffusion trails. 
-//This image is fed back to the update step to influence
-//the steering and complete the effect.
 
-//Render step takes the output of the trail step and draws it to the canvas.
+/*
+There are four draw calls per frame, outlined here:
+UPDATE
+    Inputs: MAIN_TEXTURE, STATE_TEXTURE (a texture where each pixel represents the position and angle of each particle)
+    Output: An updated STATE_TEXTURE
+    Explanation: In this step, the shader calculates the new positions and angles of all the particles, and stores the data
+        on the STATE_TEXTURE. The MAIN_TEXTURE is sampled to influence the steering of each particle based on the trails around it.
+
+DRAW
+    Inputs: STATE_TEXTURE
+    Outputs: PARTICLES_TEXTURE
+    Explanation: The draw step transforms the STATE_TEXTURE, which is just data,
+        into the PARTICLES_TEXTURE, which is a fresh texture with all of the particles 
+        drawn on in their current location.
+
+TRAIL
+    Inputs: PARTICLES_TEXTURE, MAIN_TEXTURE
+    Outputs: MAIN_TEXTURE
+    Explanation: The trail step takes the PARTICLES_TEXTURE, and draws the particles onto the MAIN_TEXTURE, which is not cleared.
+        It then applies blur to the pixels to simulate diffusion, and subtracts from each to simulate evapouration.
+
+RENDER
+    Inputs: MAIN_TEXTURE
+    Outputs: none
+    Explanation: This step just draws the MAIN_TEXTURE to the canvas.
+*/
 
 "use strict"
 
